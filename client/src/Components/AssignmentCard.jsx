@@ -1,6 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
-const AssignmentCard = ({ title, description, dueDate, aura_point, author }) => {
+const AssignmentCard = ({ _id,title, description, dueDate, aura_point, author }) => {
   return (
     <div className="assignment-card-container">
       <div className="assignment-card">
@@ -11,6 +12,7 @@ const AssignmentCard = ({ title, description, dueDate, aura_point, author }) => 
           <p><strong>Aura Points:</strong> {aura_point}</p>
           <p><strong>Author:</strong> {author.username}</p>
         </div>
+        <Link to={`/assignment/${_id}`}>Read more</Link>
       </div>
     </div>
   );

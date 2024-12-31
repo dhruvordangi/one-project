@@ -100,14 +100,37 @@ app.post("/register", async (req, res) => {
   })
 
   app.get("/assignment", async (req, res) => {
-    const posts = await Assignment.find()
+    const assignments = await Assignment.find()
       .populate("author",['username'])
       .sort({ createdAt: -1 })
       .limit(10);
-    res.json(posts);
+    res.json(assignments);
   });
 
+  app.get('/assignment/:id', async (req,res) =>{
+    const {id} = req.params;
+    const assignmentDoc = await Assignment.findById(id).populate('author',['username'])
+    res.json(assignmentDoc)
+})
 
+app.put('/assignment',upload.none(), async (req,res) =>{
+
+  const { token } = req.cookies;
+  jwt.verify(token, secret, {}, async (err, info) => {
+      if (err) throw err;
+      const {id, title, description,dueDate,aura_point} = req.body
+      const assignmentDoc = await Assignment.findById(id);
+      const isAuthor= JSON.stringify(assignmentDoc.author)===JSON.stringify(info.id)
+      if( !isAuthor ){
+          return res.status(400).json('you are not the author');
+      }
+
+      await assignmentDoc.updateOne({title, description,dueDate,aura_point})
+
+      res.json(assignmentDoc);
+   });
+
+})
 
 
 

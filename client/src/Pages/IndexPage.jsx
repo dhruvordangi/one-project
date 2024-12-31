@@ -29,9 +29,6 @@ function IndexPage() {
         
         <main className="main-content">
           <section id="dashboard" className="section">
-            <Link>
-            <h2>Dashboard</h2>
-            </Link>
             <div className="stats">
               <div className="stat-item">
                 <Link>

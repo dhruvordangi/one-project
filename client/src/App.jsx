@@ -9,6 +9,8 @@ import LoginPage from './Pages/LoginPage.jsx'
 import RegisterPage from './Pages/RegisterPage.jsx'
 import { Auth0Provider } from '@auth0/auth0-react';
 import AssignmentForm from './Pages/AssingmentForm.jsx'
+import AssignmentPage from './Pages/AssignmentPage.jsx'
+import EditAssignment from './Pages/EditAssignment.jsx'
 
 function App() {
   
@@ -29,6 +31,8 @@ function App() {
           <Route path='/login' element={<LoginPage/>} />
           <Route path='/register' element={<RegisterPage/>} />
           <Route path='/create-assignment' element={<AssignmentForm/>} />
+          <Route path='/assignment/:id' element={<AssignmentPage/>} />
+          <Route path='/edit/:id' element={<EditAssignment/>} />
         </Route>
       </Routes>
       </Auth0Provider>
