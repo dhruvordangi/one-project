@@ -54,8 +54,8 @@ function IndexPage() {
           <section id="assignments" className="section">
             <h2>Assignments</h2>
             <>
-              { assignments.length > 0  && assignments.map( (assignment,index) =>(
-                  <AssignmentCard {...assignment} /> 
+              { assignments?.length > 0  && assignments.map( (assignment,index) =>(
+                  <AssignmentCard key={index} {...assignment} /> 
               ) )}
             </>
           </section>

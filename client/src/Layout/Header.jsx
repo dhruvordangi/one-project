@@ -18,7 +18,7 @@ function Header() {
 
 
   function logout(){
-    fetch('http://localhost:4000/logout', {
+    fetch('http://localhost:3000/logout', {
       method: 'POST',
       credentials:'include'
     });
@@ -46,7 +46,7 @@ function Header() {
             <li className='user-profile-logo'>Logout</li>
             </Link>
             <li><Link className='user-profile-logo' to='/create-assignment'>Create Assingment</Link></li>
-            <li><ProfileLogo name={username} /></li>
+           <Link to='/profile'> <li><ProfileLogo name={username} /></li></Link>
             </>}
             {
               !username &&

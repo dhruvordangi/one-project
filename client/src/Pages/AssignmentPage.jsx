@@ -31,7 +31,7 @@ function AssignmentPage() {
                 <p className="assignment-description">{assignmentInfo.description}</p>
                 <div className="assignment-details">
                     <p><strong>Posted At: </strong> <time>{formatISO9075(new Date(assignmentInfo.createdAt))}</time></p>
-                    <p><strong>Due Date: </strong> {assignmentInfo.dueDate}</p>
+                    <p><strong>Due Date: </strong> <time>{formatISO9075(new Date(assignmentInfo.dueDate))}</time></p>
                     <p><strong>Aura Points:</strong> {assignmentInfo.aura_point}</p>
                 </div>
             </div>
