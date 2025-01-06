@@ -10,7 +10,7 @@ export default function LoginPage() {
     const [username,setUsername] = useState('');
     const [password,setPassword] = useState('');
     const [redirect, setRedirect] = useState(false);
-    const {setUserInfo} = useContext(UserContext)
+    const {userInfo,setUserInfo} = useContext(UserContext)
   
     async function login(ev) {
       ev.preventDefault();
@@ -32,7 +32,7 @@ export default function LoginPage() {
     }
   
     if(redirect){
-      return <Navigate to={'/'}/>
+      return <Navigate to={`profile/${userInfo.id}`}/>
     }
   
     return (

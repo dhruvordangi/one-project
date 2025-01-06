@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AssignmentCard from '../Components/AssignmentCard';
+import Sidebar from '../Layout/Sidebar';
 
 function IndexPage() {
   const [assignments,setAssignments] = useState([]);
@@ -18,15 +19,8 @@ function IndexPage() {
   return (
     <>
         <div className="content-wrapper">
-        <aside className="sidebar">
-          <ul>
-            <li><Link to='/dashboard'>Dashboard</Link></li>
-            <li><Link to='/assignments'>Assignments</Link></li>
-            <li><Link to='/todos'>To-Do</Link></li>
-            <li><Link to='/completed-task'>Completed Tasks</Link></li>
-          </ul>
-        </aside>
         
+        <Sidebar />
         <main className="main-content">
           <section id="dashboard" className="section">
             <div className="stats">

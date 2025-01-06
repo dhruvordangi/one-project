@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { UserContextProvider } from './UserContext.jsx'
 import { Routes,Route } from 'react-router-dom'
 
@@ -11,6 +10,9 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import AssignmentForm from './Pages/AssingmentForm.jsx'
 import AssignmentPage from './Pages/AssignmentPage.jsx'
 import EditAssignment from './Pages/EditAssignment.jsx'
+import ProfilePage from './Pages/ProfilePage.jsx'
+import Dashboard from './Pages/DashBoard.jsx'
+import Assignments from './Pages/Assignments.jsx'
 
 function App() {
   
@@ -33,6 +35,9 @@ function App() {
           <Route path='/create-assignment' element={<AssignmentForm/>} />
           <Route path='/assignment/:id' element={<AssignmentPage/>} />
           <Route path='/edit/:id' element={<EditAssignment/>} />
+          <Route path='/login/profile/:id' element={<ProfilePage/>} />
+          <Route path='/dashboard' element={<Dashboard/>} />
+          <Route path='/assignments' element={<Assignments/>} />
         </Route>
       </Routes>
       </Auth0Provider>

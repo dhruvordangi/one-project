@@ -22,6 +22,17 @@ const userSchema = new Schema(
       enum: ["student", "teacher"], // Ensure valid roles
       default: "student",
     },
+    section:{
+      type:String,
+    },
+    semester:{
+      type:String,
+    },
+    branch:{
+      type:String,
+      enum:["CSE","ECE","CHEM_ENG","PIE","ME","CE","EE","IT","None"],
+      default:"None"
+    },
     Assignments: [
       {
         type: Schema.Types.ObjectId,
