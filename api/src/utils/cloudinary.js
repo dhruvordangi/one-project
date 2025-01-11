@@ -8,6 +8,11 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+console.log("Cloudinary Configuration:", {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
+    api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING",
+  });
 
 /**
  * Function to upload multiple files to Cloudinary.
@@ -20,7 +25,11 @@ const uploadMultipleFiles = async (filePaths) => {
 
   for (const filePath of filePaths) {
     try {
-      if (!filePath) continue;
+        console.log("Processing file:", filePath);
+        if (!filePath) {
+          console.warn("Empty file path encountered, skipping.");
+          continue;
+        }
 
       // Get the file extension
       const fileExtension = path.extname(filePath).toLowerCase();
@@ -35,9 +44,9 @@ const uploadMultipleFiles = async (filePaths) => {
       // Upload the file to Cloudinary
       const response = await cloudinary.uploader.upload(filePath, {
         resource_type: 'auto', // Auto-detect the resource type
-        folder: 'uploads', // Optional: Add a folder in Cloudinary
       });
-
+      //file has been uploaded successfully
+        console.log("file is uploaded on cloudinary:  ",response.url);
       // Remove the file from local storage after successful upload
       fs.unlinkSync(filePath);
 

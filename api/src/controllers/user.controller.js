@@ -318,6 +318,7 @@ import { uploadMultipleFiles } from '../utils/cloudinary.js';
 const createProject = async (req, res) => {
   try {
     const { title, description, tags } = req.body;
+    console.log("Files in req.files:", req.files);
 
     // Separate student files and teacher files
     const studentFilesPaths = req.files?.studentFiles?.map((file) => file.path) || [];
