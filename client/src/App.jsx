@@ -13,6 +13,7 @@ import EditAssignment from './Pages/EditAssignment.jsx'
 import ProfilePage from './Pages/ProfilePage.jsx'
 import Dashboard from './Pages/DashBoard.jsx'
 import Assignments from './Pages/Assignments.jsx'
+import ProjectForm from './Pages/ProjectForm.jsx'
 
 function App() {
   
@@ -38,6 +39,7 @@ function App() {
           <Route path='/login/profile/:id' element={<ProfilePage/>} />
           <Route path='/dashboard' element={<Dashboard/>} />
           <Route path='/assignments' element={<Assignments/>} />
+          <Route path='/create-project' element={<ProjectForm/>} />
         </Route>
       </Routes>
       </Auth0Provider>

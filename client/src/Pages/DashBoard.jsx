@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../Layout/Sidebar";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState({
@@ -102,6 +103,10 @@ const Dashboard = () => {
                   <p>No created assignments yet</p>
                 )}
               </ul>
+              {/* Link for teachers */}
+              <Link to='/create-project' className="create-assignment-link">
+                Create a New project
+              </Link>
             </div>
           ) : (
             <div>

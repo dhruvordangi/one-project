@@ -12,7 +12,7 @@ function Sidebar() {
             <li><Link to='/assignments'>Assignments</Link></li>
             <li><Link to='/todos'>To-Do</Link></li>
             <li><Link to='/completed-task'>Completed Tasks</Link></li>
-            <li><Link to={`/login/profile/${userInfo.id}`}> Profile</Link></li>
+            <li><Link to={`/login`}> Profile</Link></li>
           </ul>
         </aside>
     </>

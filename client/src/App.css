@@ -58,13 +58,14 @@ body {
 
 .sidebar {
   width: 20%;
-  background-color: #fff;
+  background-color: #ffffff;
   padding: 2rem;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar ul {
   list-style: none;
+  
 }
 
 .sidebar ul li {
@@ -79,7 +80,7 @@ body {
 }
 
 .sidebar ul li a:hover {
-  color: #2e7d32;
+  color: #07543e;
 }
 
 .main-content {
@@ -198,25 +199,6 @@ h2 {
 
 p {
   font-size: 1rem;
-}
-
-.sidebar {
-  width: 250px;
-  background-color: #333;
-  color: white;
-  padding: 15px;
-}
-
-.sidebar a {
-  color: white;
-  text-decoration: none;
-  display: block;
-  padding: 10px 15px;
-  transition: background 0.3s;
-}
-
-.sidebar a:hover {
-  background-color: #444;
 }
 
 
@@ -545,6 +527,22 @@ form button:hover {
   }
 }
 
+.create-assignment-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.create-assignment-link:hover {
+  background-color: #0056b3;
+}
+
+
 /* Dashboard styling */
 .dashboard-wrapper {
   display: flex;
@@ -630,9 +628,113 @@ form button:hover {
   border-radius: 8px;
 }
 
-.sidebar {
-  flex: 0 0 250px;
-  background-color: #2c3e50;
-  color: #ecf0f1;
+
+/* Styles for the CreateProject component */
+/* Updated styles for a mind-blowing Create Project form */
+.super-project-wrapper {
+  display: flex;
   min-height: 100vh;
+  background: linear-gradient(120deg, #e0f7fa, #e1bee7);
+}
+
+.super-sidebar {
+  width: 20%;
+  background-color: #ffffff;
+  padding: 2rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.super-project-container {
+  flex-grow: 1;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.super-project-container h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.super-project-form label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.super-project-form input,
+.super-project-form textarea {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.super-project-form input:focus,
+.super-project-form textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+}
+
+.super-project-form button {
+  display: inline-block;
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.super-project-form button:hover {
+  background: linear-gradient(90deg, #2575fc, #6a11cb);
+  transform: scale(1.05);
+}
+
+.super-project-form button:active {
+  transform: scale(0.98);
+}
+
+.super-project-feedback {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.super-project-feedback.success {
+  color: #27ae60;
+}
+
+.super-project-feedback.error {
+  color: #e74c3c;
+}
+
+.super-project-container input[type="file"] {
+  padding: 0.5rem;
+  background: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+}
+
+.super-project-container input[type="file"]:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
 }

@@ -5,6 +5,7 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: true,
+      trim: true,
     },
     password: {
       type: String,
@@ -22,35 +23,49 @@ const userSchema = new Schema(
       enum: ["student", "teacher"], // Ensure valid roles
       default: "student",
     },
-    section:{
-      type:String,
+    section: {
+      type: String,
+      trim: true,
     },
-    semester:{
-      type:String,
+    semester: {
+      type: String,
+      trim: true,
     },
-    branch:{
-      type:String,
-      enum:["CSE","ECE","CHEM_ENG","PIE","ME","CE","EE","IT","None"],
-      default:"None"
+    branch: {
+      type: String,
+      enum: ["CSE", "ECE", "CHEM_ENG", "PIE", "ME", "CE", "EE", "IT", "None"],
+      default: "None",
     },
+    // Assignments-related fields
     Assignments: [
       {
         type: Schema.Types.ObjectId,
         ref: "Assignment",
       },
     ],
-    // Teacher-specific fields
     createdAssignments: [
       {
         type: Schema.Types.ObjectId,
         ref: "Assignment", // Assignments created by a teacher
       },
     ],
-    // Student-specific fields
     completedAssignments: [
       {
         type: Schema.Types.ObjectId,
         ref: "Assignment", // Assignments completed by a student
+      },
+    ],
+    // Project Submission fields
+    createdProjects: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ProjectSubmission", // Projects created by a teacher
+      },
+    ],
+    submittedProjects: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ProjectSubmission", // Projects submitted by a student
       },
     ],
   },
@@ -61,5 +76,7 @@ const userSchema = new Schema(
 userSchema.path("Assignments").default(() => []);
 userSchema.path("createdAssignments").default(() => []);
 userSchema.path("completedAssignments").default(() => []);
+userSchema.path("createdProjects").default(() => []);
+userSchema.path("submittedProjects").default(() => []);
 
 export const User = mongoose.model("User", userSchema);

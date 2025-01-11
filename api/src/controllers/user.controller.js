@@ -4,7 +4,7 @@ import { Assignment } from "../models/Assignment.model.js";
 import bcrypt from 'bcryptjs'
 import jwt from "jsonwebtoken"
 import cookieParser from 'cookie-parser'
-
+import ProjectSubmission from "../models/projectSubmission.model.js";
 
 
 const salt = bcrypt.genSaltSync(10);
@@ -313,6 +313,56 @@ const updateCompletedAssignment = async (req, res) => {
   }
 };
 
+import { uploadMultipleFiles } from '../utils/cloudinary.js';
+
+const createProject = async (req, res) => {
+  try {
+    const { title, description, tags } = req.body;
+
+    // Separate student files and teacher files
+    const studentFilesPaths = req.files?.studentFiles?.map((file) => file.path) || [];
+    const teacherFilesPaths = req.files?.teacherFiles?.map((file) => file.path) || [];
+
+    // Upload student files to Cloudinary
+    const studentFiles = await uploadMultipleFiles(studentFilesPaths);
+
+    // Upload teacher files to Cloudinary
+    const teacherFiles = await uploadMultipleFiles(teacherFilesPaths);
+
+    // Map uploaded files to the schema
+    const formattedStudentFiles = studentFiles.map((file) => ({
+      url: file.secure_url,
+      fileType: file.format === 'application/pdf' ? 'pdf' : 
+                file.format.includes('doc') ? 'docx' : 
+                file.format.includes('zip') ? 'zip' : 
+                'other', // Map format to enum values
+    }));
+
+    const formattedTeacherFiles = teacherFiles.map((file) => ({
+      url: file.secure_url,
+      fileType: file.format === 'application/pdf' ? 'pdf' : 
+                file.format.includes('doc') ? 'docx' : 
+                file.format.includes('zip') ? 'zip' : 
+                'other', // Map format to enum values
+    }));
+
+    const newProject = new ProjectSubmission({
+      title,
+      description,
+      tags: tags ? tags.split(',').map((tag) => tag.trim()) : [], // Default to empty array
+      files: formattedStudentFiles.length > 0 ? formattedStudentFiles : undefined,
+      teacherFiles: formattedTeacherFiles.length > 0 ? formattedTeacherFiles : undefined,
+      submitter: req.user._id, // Ensure req.user contains the authenticated user
+    });
+
+    await newProject.save();
+    res.status(201).json({ message: 'Project created successfully', project: newProject });
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(500).json({ message: 'Error creating project', error });
+  }
+};
 
 
-export {updateCompletedAssignment, getUserProfile,getCompletedAssignments,getCreatedAssignments,updateUserProfile,getUncompletedAssignments,registerUser, loginUser, logoutUser, getAssignment, getAssignmentById, postAssignment, header, editAssignment}
+
+export { createProject, updateCompletedAssignment, getUserProfile,getCompletedAssignments,getCreatedAssignments,updateUserProfile,getUncompletedAssignments,registerUser, loginUser, logoutUser, getAssignment, getAssignmentById, postAssignment, header, editAssignment}
