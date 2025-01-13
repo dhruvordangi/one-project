@@ -11,8 +11,14 @@ const Dashboard = () => {
     branch: "",
     avatar: "",
   });
+
   const [assignments, setAssignments] = useState({
     created: [],
+    completed: [],
+    uncompleted: [],
+  });
+
+  const [projects, setProjects] = useState({
     completed: [],
     uncompleted: [],
   });
@@ -37,25 +43,38 @@ const Dashboard = () => {
           const createdData = await createdResponse.json();
           setAssignments((prev) => ({ ...prev, created: createdData }));
         } else if (data.user.role === "student") {
-          const completedResponse = await fetch("http://localhost:3000/assignments/completed", {
-            method: "GET",
-            credentials: "include",
-          });
-          const uncompletedResponse = await fetch("http://localhost:3000/assignments/uncompleted", {
-            method: "GET",
-            credentials: "include",
-          });
-          if (!completedResponse.ok || !uncompletedResponse.ok)
-            throw new Error("Failed to fetch student assignments");
-          const [completedData, uncompletedData] = await Promise.all([
+          const [completedResponse, uncompletedResponse, completedProjectsResponse, uncompletedProjectsResponse] = await Promise.all([
+            fetch("http://localhost:3000/assignments/completed", { method: "GET", credentials: "include" }),
+            fetch("http://localhost:3000/assignments/uncompleted", { method: "GET", credentials: "include" }),
+            fetch("http://localhost:3000/projects/completed", { method: "GET", credentials: "include" }),
+            fetch("http://localhost:3000/projects/uncompleted", { method: "GET", credentials: "include" }),
+          ]);
+
+          if (
+            !completedResponse.ok ||
+            !uncompletedResponse.ok ||
+            !completedProjectsResponse.ok ||
+            !uncompletedProjectsResponse.ok
+          )
+            throw new Error("Failed to fetch student data");
+
+          const [completedData, uncompletedData, completedProjectsData, uncompletedProjectsData] = await Promise.all([
             completedResponse.json(),
             uncompletedResponse.json(),
+            completedProjectsResponse.json(),
+            uncompletedProjectsResponse.json(),
           ]);
+
           setAssignments((prev) => ({
             ...prev,
             completed: completedData,
             uncompleted: uncompletedData,
           }));
+
+          setProjects({
+            completed: completedProjectsData.completedProjects,
+            uncompleted: uncompletedProjectsData.uncompletedProjects,
+          });
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -83,10 +102,18 @@ const Dashboard = () => {
           </div>
           <div className="user-details">
             <h2>{userData.username}</h2>
-            <p><strong>Role:</strong> {userData.role}</p>
-            <p><strong>Section:</strong> {userData.section}</p>
-            <p><strong>Semester:</strong> {userData.semester}</p>
-            <p><strong>Branch:</strong> {userData.branch}</p>
+            <p>
+              <strong>Role:</strong> {userData.role}
+            </p>
+            <p>
+              <strong>Section:</strong> {userData.section}
+            </p>
+            <p>
+              <strong>Semester:</strong> {userData.semester}
+            </p>
+            <p>
+              <strong>Branch:</strong> {userData.branch}
+            </p>
           </div>
         </div>
 
@@ -103,9 +130,8 @@ const Dashboard = () => {
                   <p>No created assignments yet</p>
                 )}
               </ul>
-              {/* Link for teachers */}
-              <Link to='/create-project' className="create-assignment-link">
-                Create a New project
+              <Link to="/create-project" className="create-assignment-link">
+                Create a New Project
               </Link>
             </div>
           ) : (
@@ -128,6 +154,26 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <p>No completed assignments yet</p>
+                )}
+              </ul>
+              <h3>Uncompleted Projects</h3>
+              <ul>
+                {projects.uncompleted.length > 0 ? (
+                  projects.uncompleted.map((project) => (
+                    <li key={project._id}>{project.title}</li>
+                  ))
+                ) : (
+                  <p>No uncompleted projects</p>
+                )}
+              </ul>
+              <h3>Completed Projects</h3>
+              <ul>
+                {projects.completed.length > 0 ? (
+                  projects.completed.map((project) => (
+                    <li key={project._id}>{project.title}</li>
+                  ))
+                ) : (
+                  <p>No completed projects yet</p>
                 )}
               </ul>
             </div>

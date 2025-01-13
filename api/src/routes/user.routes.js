@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from 'multer'
-import { createProject, editAssignment, getAssignment, getAssignmentById, header, loginUser,logoutUser, postAssignment, registerUser } from "../controllers/user.controller.js";
+import { createProject, editAssignment, getAssignment, getAssignmentById, getCompletedProjects, getTeacherCreatedProjects, getUncompletedProjects, header, loginUser,logoutUser, postAssignment, registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { isTeacher } from "../middlewares/isTeacher.js";
 
@@ -20,6 +20,11 @@ const uploadNone=multer()
 
 router.route("/profile").get( isAuthenticated, getUserProfile);
 router.route("/update").put( isAuthenticated, updateUserProfile);
+// Route to get completed projects
+router.route('/projects/completed').get( isAuthenticated,getCompletedProjects );
+
+// Route to get uncompleted projects
+router.route('/projects/uncompleted').get( isAuthenticated, getUncompletedProjects);
 
 // Assignment-related endpoints
 router.route("/assignments/created").get( isAuthenticated, getCreatedAssignments);
@@ -37,6 +42,7 @@ router.route("/assignment").get(getAssignment)
 router.route("/assignment/:id").get(getAssignmentById)
 router.route("/assignment").put(uploadNone.none(), editAssignment)
 // router.route("/upload-file").post( upload.single("file"), uploadFile);
+router.route('/teacher/projects').get( isAuthenticated, getTeacherCreatedProjects);
 router
   .route('/projects')
   .post(

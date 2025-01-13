@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import jwt from "jsonwebtoken"
 import cookieParser from 'cookie-parser'
 import ProjectSubmission from "../models/projectSubmission.model.js";
-
+import { uploadMultipleFiles } from '../utils/cloudinary.js';
 
 const salt = bcrypt.genSaltSync(10);
 const secret = "jn4k5n6n5nnn6oi4n";
@@ -213,7 +213,7 @@ const updateUserProfile = async (req, res) => {
 const getCreatedAssignments = async (req, res) => {
   try {
     const userId = req.user.id; // Assuming you're using authentication middleware
-    const assignments = await Assignment.find({ createdBy: userId });
+    const assignments = await Assignment.find({ author: userId });
 
     res.status(200).json(assignments);
   } catch (error) {
@@ -313,7 +313,6 @@ const updateCompletedAssignment = async (req, res) => {
   }
 };
 
-import { uploadMultipleFiles } from '../utils/cloudinary.js';
 
 const createProject = async (req, res) => {
   try {
@@ -357,13 +356,84 @@ const createProject = async (req, res) => {
     });
 
     await newProject.save();
-    res.status(201).json({ message: 'Project created successfully', project: newProject });
+    return res.status(201).json({ message: 'Project created successfully', project: newProject });
   } catch (error) {
     console.error('Error creating project:', error);
-    res.status(500).json({ message: 'Error creating project', error });
+    return res.status(500).json({ message: 'Error creating project', error });
+  }
+};
+
+const getTeacherCreatedProjects = async (req, res) => {
+  try {
+    const teacherId = req.user.id; // Assuming `req.user` is populated by your authentication middleware
+
+    // Find projects where `submitter` matches the teacher's ID
+    const projects = await ProjectSubmission.find({ submitter: teacherId });
+
+    return res.status(200).json({
+      success: true,
+      projects,
+    });
+  } catch (error) {
+    console.error('Error fetching teacher-created projects:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch projects. Please try again later.',
+    });
   }
 };
 
 
+// GET /api/projects/completed
+const getCompletedProjects = async (req, res) => {
+  try {
+    const userId = req.user.id; // Current student's ID
 
-export { createProject, updateCompletedAssignment, getUserProfile,getCompletedAssignments,getCreatedAssignments,updateUserProfile,getUncompletedAssignments,registerUser, loginUser, logoutUser, getAssignment, getAssignmentById, postAssignment, header, editAssignment}
+    // Fetch completed projects by their IDs
+    const completedProjects = await ProjectSubmission.find({
+      _id: { $in: req.user.submittedProjects },
+    });
+
+    res.status(200).json({
+      success: true,
+      completedProjects,
+    });
+  } catch (error) {
+    console.error('Error fetching completed projects:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// GET /api/projects/uncompleted
+const getUncompletedProjects = async (req, res) => {
+  try {
+    const userId = req.user.id; // Current student's ID
+    const { section, branch, submittedProjects } = req.user;
+
+    // Fetch teachers from the same section and branch
+    const teachers = await User.find({
+      role: 'teacher',
+      section: section,
+      branch: branch,
+    });
+
+    const teacherIds = teachers.map((teacher) => teacher._id);
+
+    // Fetch projects created by these teachers that are not submitted by the student
+    const uncompletedProjects = await ProjectSubmission.find({
+      submitter: { $in: teacherIds },
+      _id: { $nin: submittedProjects },
+    });
+
+    res.status(200).json({
+      success: true,
+      uncompletedProjects,
+    });
+  } catch (error) {
+    console.error('Error fetching uncompleted projects:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+export {getUncompletedProjects , getCompletedProjects, getTeacherCreatedProjects , createProject, updateCompletedAssignment, getUserProfile,getCompletedAssignments,getCreatedAssignments,updateUserProfile,getUncompletedAssignments,registerUser, loginUser, logoutUser, getAssignment, getAssignmentById, postAssignment, header, editAssignment}
