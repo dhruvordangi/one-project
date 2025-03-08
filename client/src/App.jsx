@@ -14,6 +14,8 @@ import ProfilePage from './Pages/ProfilePage.jsx'
 import Dashboard from './Pages/DashBoard.jsx'
 import Assignments from './Pages/Assignments.jsx'
 import ProjectForm from './Pages/ProjectForm.jsx'
+import AllProjects from './Pages/ProjectPage/AllProjects.jsx'
+import ProjectPage from './Pages/ProjectPage/ProjectsPage.jsx'
 
 function App() {
   
@@ -40,6 +42,8 @@ function App() {
           <Route path='/dashboard' element={<Dashboard/>} />
           <Route path='/assignments' element={<Assignments/>} />
           <Route path='/create-project' element={<ProjectForm/>} />
+          <Route path='/create-project/:id' element={<ProjectPage/>} />
+          <Route path='/all-projects' element={<AllProjects/>} />
         </Route>
       </Routes>
       </Auth0Provider>

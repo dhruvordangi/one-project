@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from 'multer'
-import { createProject, editAssignment, getAssignment, getAssignmentById, getCompletedProjects, getTeacherCreatedProjects, getUncompletedProjects, header, loginUser,logoutUser, postAssignment, registerUser } from "../controllers/user.controller.js";
+import { createProject, editAssignment, getAssignment, getAssignmentById, getCompletedProjects, getProjectById, getTeacherCreatedProjects, getUncompletedProjects, header, loginUser,logoutUser, postAssignment, registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { isTeacher } from "../middlewares/isTeacher.js";
 
@@ -22,7 +22,8 @@ router.route("/profile").get( isAuthenticated, getUserProfile);
 router.route("/update").put( isAuthenticated, updateUserProfile);
 // Route to get completed projects
 router.route('/projects/completed').get( isAuthenticated,getCompletedProjects );
-
+//route to get created Projects
+router.route('/projects/created').get(isAuthenticated,getTeacherCreatedProjects)
 // Route to get uncompleted projects
 router.route('/projects/uncompleted').get( isAuthenticated, getUncompletedProjects);
 
@@ -54,6 +55,7 @@ router
     ]),
     createProject
   );
+  router.route("/projects/:id").get( getProjectById);
 // router.route("/")
 // router.route("/")
 

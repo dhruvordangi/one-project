@@ -19,6 +19,7 @@ const Dashboard = () => {
   });
 
   const [projects, setProjects] = useState({
+    created: [],
     completed: [],
     uncompleted: [],
   });
@@ -35,13 +36,27 @@ const Dashboard = () => {
         setUserData(data.user);
 
         if (data.user.role === "teacher") {
-          const createdResponse = await fetch("http://localhost:3000/assignments/created", {
-            method: "GET",
-            credentials: "include",
-          });
-          if (!createdResponse.ok) throw new Error("Failed to fetch created assignments");
-          const createdData = await createdResponse.json();
-          setAssignments((prev) => ({ ...prev, created: createdData }));
+          const [createdAssignmentsResponse, createdProjectsResponse] = await Promise.all([
+            fetch("http://localhost:3000/assignments/created", {
+              method: "GET",
+              credentials: "include",
+            }),
+            fetch("http://localhost:3000/projects/created", {
+              method: "GET",
+              credentials: "include",
+            }),
+          ]);
+
+          if (!createdAssignmentsResponse.ok || !createdProjectsResponse.ok)
+            throw new Error("Failed to fetch teacher data");
+
+          const [createdAssignmentsData, createdProjectsData] = await Promise.all([
+            createdAssignmentsResponse.json(),
+            createdProjectsResponse.json(),
+          ]);
+
+          setAssignments((prev) => ({ ...prev, created: createdAssignmentsData }));
+          setProjects((prev) => ({ ...prev, created: createdProjectsData.projects }));
         } else if (data.user.role === "student") {
           const [completedResponse, uncompletedResponse, completedProjectsResponse, uncompletedProjectsResponse] = await Promise.all([
             fetch("http://localhost:3000/assignments/completed", { method: "GET", credentials: "include" }),
@@ -128,6 +143,16 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <p>No created assignments yet</p>
+                )}
+              </ul>
+              <h3>Created Projects</h3>
+              <ul>
+                {projects.created.length > 0 ? (
+                  projects.created.map((project) => (
+                    <li key={project._id}>{project.title}</li>
+                  ))
+                ) : (
+                  <p>No created projects yet</p>
                 )}
               </ul>
               <Link to="/create-project" className="create-assignment-link">
