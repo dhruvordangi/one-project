@@ -16,6 +16,7 @@ import Assignments from './Pages/Assignments.jsx'
 import ProjectForm from './Pages/ProjectForm.jsx'
 import AllProjects from './Pages/ProjectPage/AllProjects.jsx'
 import ProjectPage from './Pages/ProjectPage/ProjectsPage.jsx'
+import ChallengesPage from './Pages/Challenges/Challenges.jsx'
 
 function App() {
   
@@ -44,6 +45,7 @@ function App() {
           <Route path='/create-project' element={<ProjectForm/>} />
           <Route path='/create-project/:id' element={<ProjectPage/>} />
           <Route path='/all-projects' element={<AllProjects/>} />
+          <Route path='/challenges' element={<ChallengesPage/>} />
         </Route>
       </Routes>
       </Auth0Provider>

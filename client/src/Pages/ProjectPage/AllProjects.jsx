@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Loader2, FileText, CheckCircle, XCircle, Folder, FolderOpen } from "lucide-react";
+import Sidebar from "../../Layout/Sidebar";
 
 // Card components
 const Card = ({ children, className, ...props }) => (
@@ -163,6 +164,7 @@ export default function AllProjects() {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100 p-6">
+      <Sidebar/>
       <div className="container mx-auto">
         <nav className="mb-8 flex justify-between items-center">
           <Link to="/" className="text-lg font-semibold text-blue-500 hover:text-blue-700">

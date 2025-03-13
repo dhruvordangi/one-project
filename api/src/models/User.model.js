@@ -15,6 +15,10 @@ const userSchema = new Schema(
       type: Number,
       default: 0,
     },
+    credit_points: {
+      type: Number,
+      default: 0,
+    },
     avatar: {
       type: String,
     },
@@ -36,6 +40,12 @@ const userSchema = new Schema(
       enum: ["CSE", "ECE", "CHEM_ENG", "PIE", "ME", "CE", "EE", "IT", "None"],
       default: "None",
     },
+    // Achievement badge field with default "Rookie" and five additional ranks.
+    badge: {
+      type: String,
+      enum: ["Rookie", "Novice", "Intermediate", "Advanced"],
+        default: "Rookie",
+      },
     // Assignments-related fields
     Assignments: [
       {
@@ -68,6 +78,17 @@ const userSchema = new Schema(
         ref: "ProjectSubmission", // Projects submitted by a student
       },
     ],
+    // Challenges tracking
+    challenges: [
+      {
+        description: { type: String, required: true }, // e.g., "Complete two chapters by Friday"
+        type: { type: String, enum: ["daily", "weekly"], required: true }, // Challenge type
+        completed: { type: Boolean, default: false }, // Has the student completed it?
+        rewardAura: { type: Number, default: 0 }, // Aura points reward
+        rewardCredits: { type: Number, default: 0 }, // Credit points reward
+        deadline: { type: Date, required: true }, // Challenge deadline
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -78,5 +99,6 @@ userSchema.path("createdAssignments").default(() => []);
 userSchema.path("completedAssignments").default(() => []);
 userSchema.path("createdProjects").default(() => []);
 userSchema.path("submittedProjects").default(() => []);
+userSchema.path("challenges").default(() => []);
 
 export const User = mongoose.model("User", userSchema);

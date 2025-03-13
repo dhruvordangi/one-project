@@ -1,10 +1,8 @@
 import { Router } from "express";
 import multer from 'multer'
-import { createProject, editAssignment, getAssignment, getAssignmentById, getCompletedProjects, getProjectById, getTeacherCreatedProjects, getUncompletedProjects, header, loginUser,logoutUser, postAssignment, registerUser } from "../controllers/user.controller.js";
+import { createProject, editAssignment, getAssignment, getAssignmentById, getCompletedProjects, getProjectById, getTeacherCreatedProjects, getUncompletedProjects, header, loginUser,logoutUser, postAssignment, registerUser, uploadAndSubmitProject } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import { isTeacher } from "../middlewares/isTeacher.js";
 
-import express from "express";
 import {
   getUserProfile,
   updateCompletedAssignment,
@@ -14,6 +12,7 @@ import {
   getUncompletedAssignments,
 } from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
+import { addChallenge, completeChallenge, getAllChallenges, getCompletedChallenges } from "../controllers/challenge.controller.js";
 
 const router = Router();
 const uploadNone=multer()
@@ -56,6 +55,22 @@ router
     createProject
   );
   router.route("/projects/:id").get( getProjectById);
+  router.post(
+    "/submit-project/:projectId",
+    isAuthenticated,
+    upload.single("file"), // Uses the provided upload middleware
+    uploadAndSubmitProject
+  );
+
+
+router.get("/challenges", isAuthenticated, getAllChallenges);
+
+// Add a new challenge (teacher only)
+router.post("/challenges/add", isAuthenticated, addChallenge);
+
+// Mark a challenge as complete (student)
+router.post("/challenges/:challengeId/complete", isAuthenticated, completeChallenge);
+router.get("/challenges/completed", isAuthenticated, getCompletedChallenges);
 // router.route("/")
 // router.route("/")
 

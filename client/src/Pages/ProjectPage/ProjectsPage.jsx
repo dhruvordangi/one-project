@@ -1,11 +1,15 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Sidebar from "../../Layout/Sidebar";
 
 function ProjectPage() {
-  const { id } = useParams();
+  const { id } = useParams(); // This is the projectId
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,28 +30,43 @@ function ProjectPage() {
     fetchProject();
   }, [id]);
 
-  const handleNavigate = () => {
-    navigate("/create-project");
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
-  const handleSubmitProject = async () => {
+  const handleSubmit = async () => {
+    if (!file) {
+      alert("Please select a file before submitting.");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const response = await fetch(`http://localhost:3000/projects/${id}/submit`, {
+      // Call the endpoint that uploads the file and updates the project,
+      // then adds the project to the user's submittedProjects.
+      const response = await fetch(`http://localhost:3000/submit-project/${id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Submitted" }),
+        credentials: 'include',
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to submit project. Status: ${response.status}`);
+        throw new Error("Project submission failed.");
       }
 
-      setProject((prevProject) => ({
-        ...prevProject,
-        status: "Submitted",
-      }));
+      const result = await response.json();
+      alert(result.message);
+      // Update local state if needed. For example, mark project as submitted.
+      setProject((prev) => ({ ...prev, status: "submitted" }));
+      // Optionally, navigate to dashboard or another page:
+      // navigate("/dashboard");
     } catch (err) {
-      alert("Error submitting project: " + err.message);
+      alert(err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -56,22 +75,30 @@ function ProjectPage() {
 
   return (
     <div style={styles.projectPage}>
+      <Sidebar/>
       {project && (
         <div style={styles.projectContainer}>
           <h1 style={styles.projectTitle}>{project.title || "Untitled Project"}</h1>
-          <p style={styles.projectDescription}>{project.description || "No description available."}</p>
+          <p style={styles.projectDescription}>
+            {project.description || "No description available."}
+          </p>
 
           <div style={styles.projectSection}>
             <h2>Submitter:</h2>
-            <p>{project.submitter ? project.submitter.name : "Unknown"}</p>
+            <p>{project.submitter ? project.submitter.username : "Unknown"}</p>
           </div>
 
           <div style={styles.projectSection}>
             <h2>Files:</h2>
-            {project.files?.length > 0 ? (
+            {project.files && project.files.length > 0 ? (
               project.files.map((file, index) => (
                 <div key={index} style={styles.fileItem}>
-                  <a href={file.url} target="_blank" rel="noopener noreferrer" style={styles.fileLink}>
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.fileLink}
+                  >
                     {file.fileType?.toUpperCase() || "Unknown"} File
                   </a>
                 </div>
@@ -88,7 +115,7 @@ function ProjectPage() {
 
           <div style={styles.projectSection}>
             <h2>Tags:</h2>
-            {project.tags?.length > 0 ? (
+            {project.tags && project.tags.length > 0 ? (
               <ul>
                 {project.tags.map((tag, index) => (
                   <li key={index}>{tag}</li>
@@ -106,14 +133,28 @@ function ProjectPage() {
             </div>
           )}
 
+          {/* File Upload Section */}
+          <div style={styles.projectSection}>
+            <h2>Upload Completed File:</h2>
+            <input type="file" onChange={handleFileChange} style={styles.fileInput} />
+          </div>
+
           {/* Submit Project Button */}
           <div style={styles.projectSection}>
             <button
-              onClick={handleNavigate}
-              disabled={project.status === "Submitted"}
-              style={project.status === "Submitted" ? styles.disabledButton : styles.submitButton}
+              onClick={handleSubmit}
+              disabled={uploading || project.status === "submitted"}
+              style={
+                uploading || project.status === "submitted"
+                  ? styles.disabledButton
+                  : styles.submitButton
+              }
             >
-              {project.status === "Submitted" ? "Project Submitted" : "Submit Project"}
+              {uploading
+                ? "Uploading..."
+                : project.status === "submitted"
+                ? "Project Submitted"
+                : "Submit Project"}
             </button>
           </div>
         </div>
@@ -166,6 +207,10 @@ const styles = {
     fontWeight: "bold",
     transition: "0.3s",
   },
+  fileInput: {
+    display: "block",
+    margin: "10px 0",
+  },
   submitButton: {
     width: "100%",
     padding: "10px",
@@ -190,19 +235,6 @@ const styles = {
     background: "#ccc",
     color: "#666",
     cursor: "not-allowed",
-  },
-  navigateButton: {
-    width: "100%",
-    padding: "10px",
-    border: "none",
-    borderRadius: "6px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    marginTop: "10px",
-    background: "#007bff",
-    color: "white",
-    transition: "0.3s",
   },
   loading: {
     textAlign: "center",

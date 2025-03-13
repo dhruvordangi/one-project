@@ -156,28 +156,31 @@ const editAssignment = asyncHandler(async (req, res) => {
 });
 
 // GET /api/user/profile
-const getUserProfile = async (req, res) => {
+const getUserProfile = asyncHandler(async (req, res) => {
   try {
     const userId = req.user.id; // Assuming you're using authentication middleware
-    const user = await User.findById(userId).populate([
-      { path: "Assignments", select: "title" },
-      { path: "completedAssignments", select: "title" },
-      { path: "createdAssignments", select: "title" },
-    ]);
+    
+    const user = await User.findById(userId)
+      .select("-password") // Exclude password field
+      .populate([
+        { path: "Assignments", select: "title" },
+        { path: "completedAssignments", select: "title" },
+        { path: "createdAssignments", select: "title" },
+        { path: "createdProjects", select: "title" },
+        { path: "submittedProjects", select: "title" },
+      ]);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    user.Assignments = user.Assignments || [];
-    user.completedAssignments = user.completedAssignments || [];
-    user.createdAssignments = user.createdAssignments || [];
+    console.log(user)
 
     return res.status(200).json({ user });
   } catch (error) {
     console.error("Error fetching user profile:", error);
     return res.status(500).json({ message: "Server error" });
   }
-};
+});
 
 // PUT /api/user/update
 const updateUserProfile = async (req, res) => {
@@ -406,8 +409,13 @@ const getCompletedProjects = async (req, res) => {
   try {
     const userId = req.user.id; // Current student's ID
 
-    // Fetch completed projects by their IDs
-    const completedProjects = await ProjectSubmission.find({ submitter: userId });
+    // Find the user and populate the submittedProjects field
+    const user = await User.findById(userId).populate("submittedProjects");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const completedProjects = user.submittedProjects;
 
     res.status(200).json({
       success: true,
@@ -452,70 +460,75 @@ const getUncompletedProjects = async (req, res) => {
   }
 };
 
-
-// Get Project Details by ID
-const getProjectById = async (req, res) => {
-  const { id } = req.params;
-  // console.log("Fetching project with ID:", id); // Debugging
-
+ const getProjectById = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      // console.log("Invalid Project ID:", id);
-      return res.status(400).json({ message: "Invalid Project ID" });
-    }
-
-    const project = await ProjectSubmission.findById(id)
-      .populate("submitter", "name email") // Populating submitter details
-      .exec();
-
+    const projectId = req.params.id;
+    const project = await ProjectSubmission.findById(projectId).populate("submitter", "username");
     if (!project) {
-      console.log("Project not found for ID:", id);
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ success: false, message: "Project not found." });
     }
+    res.status(200).json(project);
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+import path from "path";
+import { log } from "console";
 
-    // console.log("Project found:", project);
-
-    // Ensure fields are always arrays to prevent frontend errors
+// Controller to handle file upload, update the project, and add to user's submittedProjects
+ const uploadAndSubmitProject = async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+    const userId = req.user.id; // Assumes authentication middleware sets req.user
+    
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
+    
+    // Construct file URL (assuming you serve static files from "./public")
+    const fileUrl = `/temp/${req.file.filename}`;
+    const fileType = path.extname(req.file.originalname).substring(1).toLowerCase();
+    
+    // Find the project by its ID and update it with the new file
+    const project = await ProjectSubmission.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found." });
+    }
+    
+    project.files.push({ url: fileUrl, fileType });
+    // project.status = "submitted"; // Update status as needed
+    await project.save();
+    
+    // Find the user and add this project ID to their submittedProjects (if not already added)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+    
+    if (!user.submittedProjects.includes(project._id)) {
+      user.submittedProjects.push(project._id);
+      await user.save();
+    }
+    
     res.status(200).json({
-      ...project.toObject(),
-      files: project.files || [],
-      teacherFiles: project.teacherFiles || [],
-      tags: project.tags || [],
+      success: true,
+      message: "Project updated and submitted successfully.",
+      project,
     });
   } catch (error) {
-    // console.error("Error fetching project:", error);
-    res.status(500).json({ message: "Server error, please try again later." });
+    console.error("Error in uploadAndSubmitProject:", error);
+    res.status(500).json({ success: false, message: "Server error." });
   }
 };
 
-
-// const submitProject = async (req, res) => {
-//   try {
-//     const { projectId } = req.body;
-//     const userId = req.params.userId;
-
-//     const user = await User.findById(userId);
-//     if (!user) return res.status(404).json({ message: 'User not found' });
-
-//     if (user.role !== 'student') {
-//       return res.status(403).json({ message: 'Only students can submit projects' });
-//     }
-
-//     user.submittedProjects.push(projectId);
-//     await user.save();
-
-//     res.status(200).json({ message: 'Project added to submittedProjects' });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error: error.message });
-//   }
-// };
 
 
 
 
 
 export {
-  // submitProject,
+  uploadAndSubmitProject,
   getProjectById,
   getUncompletedProjects,
   getCompletedProjects,
