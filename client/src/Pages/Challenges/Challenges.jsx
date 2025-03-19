@@ -1,381 +1,193 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../../Layout/Sidebar";
 
-function ChallengesPage() {
+const Challenges = () => {
   const [userData, setUserData] = useState({
     username: "",
-    role: "student",
+    role: "student", // default
     section: "",
     semester: "",
     branch: "",
     avatar: "",
+    aura_points: 0,
+    credit_points: 0,
+    _id: ""
   });
-
-  const [challenges, setChallenges] = useState([]);
-  const [completedChallenges, setCompletedChallenges] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [newChallenge, setNewChallenge] = useState({
-    description: "",
-    type: "daily",
-    rewardAura: 0,
-    rewardCredits: 0,
-    deadline: "",
+  
+  // For teachers, store created challenges.
+  const [teacherChallenges, setTeacherChallenges] = useState([]);
+  // For students, store completed and uncompleted challenges.
+  const [studentChallenges, setStudentChallenges] = useState({
+    completed: [],
+    uncompleted: []
   });
+  
+  const navigate = useNavigate();
 
+  // Inline styling objects
+  const containerStyle = {
+    maxWidth: "800px",
+    margin: "30px auto",
+    padding: "20px",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    background: "#f9f9f9",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)"
+  };
+
+  const headerStyle = {
+    textAlign: "center",
+    color: "#333",
+    marginBottom: "20px"
+  };
+
+  const subHeaderStyle = {
+    textAlign: "center",
+    color: "#555",
+    fontSize: "20px",
+    marginBottom: "10px"
+  };
+
+  const buttonStyle = {
+    padding: "10px 20px",
+    marginBottom: "20px",
+    background: "#4CAF50",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "16px",
+    display: "block",
+    marginLeft: "auto",
+    marginRight: "auto"
+  };
+
+  const listStyle = {
+    listStyle: "none",
+    padding: 0
+  };
+
+  const listItemStyle = {
+    margin: "10px 0",
+    padding: "12px 16px",
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    transition: "background 0.3s"
+  };
+
+  const linkStyle = {
+    textDecoration: "none",
+    color: "#007BFF",
+    fontWeight: "bold"
+  };
+
+  // Fetch the user profile first, then fetch challenges based on the role.
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchProfile = async () => {
       try {
         const response = await fetch("http://localhost:3000/profile", {
           method: "GET",
-          credentials: "include",
+          credentials: "include"
         });
         if (!response.ok) throw new Error("Failed to fetch user profile");
-        const data = await response.json();
-        setUserData(data.user);
+        const { user } = await response.json(); // Expecting { user: { ... } }
+        setUserData(user);
       } catch (error) {
-        setError(error.message);
+        console.error("Error fetching user profile:", error);
       }
     };
-    fetchUserData();
+
+    fetchProfile();
   }, []);
 
-  const userRole = userData.role || "student";
-
-  const fetchChallenges = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/challenges", {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch challenges");
-      const data = await res.json();
-      setChallenges(data.challenges);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCompletedChallenges = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/challenges/completed", {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch completed challenges");
-      const data = await res.json();
-      setCompletedChallenges(data.challenges);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+  // Once we have the user, fetch challenges based on role.
   useEffect(() => {
-    fetchChallenges();
-    fetchCompletedChallenges();
-  }, []);
-
-  const handleComplete = async (challengeId) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/challenges/${challengeId}/complete`,
-        {
-          method: "POST",
+    if (!userData._id) return;
+  
+    const fetchChallenges = async () => {
+      try {
+        let url = userData.role === "teacher"
+          ? "http://localhost:3000/challenges/created"
+          : "http://localhost:3000/challenges/student";
+  
+        const res = await fetch(url, {
+          method: "GET",
           credentials: "include",
+        });
+  
+        if (!res.ok) {
+          const errorMessage = await res.text();
+          throw new Error(`Failed to fetch challenges: ${errorMessage}`);
         }
-      );
-      if (!res.ok) throw new Error("Failed to complete challenge");
-      const data = await res.json();
-      // Refresh the challenges lists
-      fetchChallenges();
-      fetchCompletedChallenges();
-      alert(data.message);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  // handleAddChallenge for teachers to add new challenges
-  const handleAddChallenge = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:3000/challenges", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(newChallenge),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to add challenge");
+  
+        const data = await res.json();
+        
+        if (userData.role === "teacher") {
+          setTeacherChallenges(data);
+        } else {
+          setStudentChallenges(data);
+        }
+      } catch (err) {
+        console.error("Error fetching challenges:", err.message);
       }
-      const data = await res.json();
-      alert(data.message || "Challenge added successfully");
-      // Refresh the challenges list to include the new challenge
-      fetchChallenges();
-      // Reset the form fields
-      setNewChallenge({
-        description: "",
-        type: "daily",
-        rewardAura: 0,
-        rewardCredits: 0,
-        deadline: "",
-      });
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+    };
+  
+    fetchChallenges();
+  }, [userData]);
+  
 
-  if (loading) return <div style={styles.loading}>Loading challenges...</div>;
-  if (error) return <div style={styles.error}>Error: {error}</div>;
+  const handleCreate = () => {
+    navigate("/challenges/create");
+  };
 
   return (
-    <div style={styles.container}>
+    <div style={containerStyle}>
       <Sidebar/>
-      <h1 style={styles.title}>Daily & Weekly Challenges</h1>
-
-      {userRole === "teacher" && (
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Add New Challenge</h2>
-          <form onSubmit={handleAddChallenge} style={styles.form}>
-            <label style={styles.label}>Challenge Description</label>
-            <input
-              type="text"
-              name="description"
-              placeholder="Enter challenge description"
-              value={newChallenge.description}
-              onChange={(e) =>
-                setNewChallenge({ ...newChallenge, description: e.target.value })
-              }
-              required
-              style={styles.input}
-            />
-
-            <label style={styles.label}>Challenge Type</label>
-            <select
-              name="type"
-              value={newChallenge.type}
-              onChange={(e) =>
-                setNewChallenge({ ...newChallenge, type: e.target.value })
-              }
-              style={styles.input}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-            </select>
-
-            <label style={styles.label}>Reward Aura</label>
-            <input
-              type="number"
-              name="rewardAura"
-              placeholder="Enter reward aura"
-              value={newChallenge.rewardAura}
-              onChange={(e) =>
-                setNewChallenge({
-                  ...newChallenge,
-                  rewardAura: parseInt(e.target.value) || 0,
-                })
-              }
-              style={styles.input}
-            />
-
-            <label style={styles.label}>Reward Credits</label>
-            <input
-              type="number"
-              name="rewardCredits"
-              placeholder="Enter reward credits"
-              value={newChallenge.rewardCredits}
-              onChange={(e) =>
-                setNewChallenge({
-                  ...newChallenge,
-                  rewardCredits: parseInt(e.target.value) || 0,
-                })
-              }
-              style={styles.input}
-            />
-
-            <label style={styles.label}>Deadline</label>
-            <input
-              type="date"
-              name="deadline"
-              value={newChallenge.deadline}
-              onChange={(e) =>
-                setNewChallenge({ ...newChallenge, deadline: e.target.value })
-              }
-              required
-              style={styles.input}
-            />
-
-            <button type="submit" style={styles.button}>
-              Add Challenge
-            </button>
-          </form>
+      <h1 style={headerStyle}>Challenges</h1>
+      {userData.role === "teacher" ? (
+        <div>
+          <button style={buttonStyle} onClick={handleCreate}>
+            Create Challenge
+          </button>
+          <h2 style={subHeaderStyle}>Your Created Challenges</h2>
+          <ul style={listStyle}>
+            {teacherChallenges.map((challenge) => (
+              <li key={challenge._id} style={listItemStyle}>
+                <Link to={`/challenges/${challenge._id}`} style={linkStyle}>
+                  {challenge.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
-
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>Available Challenges</h2>
-        {challenges.length === 0 ? (
-          <p style={styles.infoText}>No challenges available.</p>
-        ) : (
-          challenges.map((challenge) => (
-            <div key={challenge._id} style={styles.challengeCard}>
-              <h3 style={styles.challengeTitle}>{challenge.description}</h3>
-              <p style={styles.challengeInfo}>Type: {challenge.type}</p>
-              <p style={styles.challengeInfo}>
-                Deadline: {new Date(challenge.deadline).toLocaleDateString()}
-              </p>
-              <p style={styles.challengeInfo}>
-                Rewards: {challenge.rewardAura} Aura, {challenge.rewardCredits} Credits
-              </p>
-              {userRole === "student" && (
-                <button
-                  onClick={() => handleComplete(challenge._id)}
-                  style={styles.completeButton}
-                >
-                  Mark as Completed
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {userRole !== "teacher" && (
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Completed Challenges</h2>
-          {completedChallenges.length === 0 ? (
-            <p style={styles.infoText}>No completed challenges yet.</p>
-          ) : (
-            completedChallenges.map((challenge) => (
-              <div key={challenge._id} style={styles.completedCard}>
-                <h3 style={styles.challengeTitle}>{challenge.description}</h3>
-                <p style={styles.challengeInfo}>
-                  Completed before: {new Date(challenge.deadline).toLocaleDateString()}
-                </p>
-              </div>
-            ))
-          )}
+      ) : (
+        <div>
+          <h2 style={subHeaderStyle}>Completed Challenges</h2>
+          <ul style={listStyle}>
+            {studentChallenges.completed.map((challenge) => (
+              <li key={challenge._id} style={listItemStyle}>
+                <Link to={`/challenges/${challenge._id}`} style={linkStyle}>
+                  {challenge.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <h2 style={subHeaderStyle}>Uncompleted Challenges</h2>
+          <ul style={listStyle}>
+            {studentChallenges.uncompleted.map((challenge) => (
+              <li key={challenge._id} style={listItemStyle}>
+                <Link to={`/challenges/${challenge._id}`} style={linkStyle}>
+                  {challenge.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
-}
-
-const styles = {
-  container: {
-    padding: "50px 40px",
-    maxWidth: "950px",
-    margin: "50px auto",
-    background: "linear-gradient(135deg, #fdfbfb, #ebedee)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-    borderRadius: "12px",
-    fontFamily: "'Poppins', sans-serif",
-  },
-  title: {
-    textAlign: "center",
-    fontSize: "40px",
-    marginBottom: "40px",
-    color: "#333",
-    fontWeight: "700",
-  },
-  section: {
-    marginBottom: "40px",
-    padding: "25px",
-    backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
-  },
-  sectionTitle: {
-    fontSize: "32px",
-    marginBottom: "20px",
-    color: "#444",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  label: {
-    fontSize: "18px",
-    fontWeight: "600",
-    color: "#555",
-  },
-  input: {
-    padding: "12px",
-    fontSize: "16px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    outline: "none",
-    transition: "border-color 0.3s ease",
-  },
-  button: {
-    padding: "14px 24px",
-    fontSize: "18px",
-    backgroundColor: "#4CAF50",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "background-color 0.3s ease, transform 0.2s ease",
-  },
-  challengeCard: {
-    padding: "25px",
-    border: "1px solid #e0e0e0",
-    marginBottom: "20px",
-    borderRadius: "12px",
-    backgroundColor: "#fff",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-  },
-  completedCard: {
-    padding: "25px",
-    backgroundColor: "#e6ffe6",
-    marginBottom: "20px",
-    borderRadius: "12px",
-    border: "1px solid #c2e8c2",
-  },
-  challengeTitle: {
-    fontSize: "22px",
-    marginBottom: "12px",
-    color: "#333",
-  },
-  challengeInfo: {
-    fontSize: "18px",
-    margin: "6px 0",
-    color: "#555",
-  },
-  completeButton: {
-    padding: "12px 20px",
-    fontSize: "18px",
-    backgroundColor: "#4CAF50",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    marginTop: "15px",
-    transition: "background-color 0.3s ease, transform 0.2s ease",
-  },
-  loading: {
-    textAlign: "center",
-    padding: "40px",
-    fontSize: "20px",
-    color: "#555",
-  },
-  error: {
-    textAlign: "center",
-    padding: "40px",
-    color: "#d8000c",
-    fontWeight: "bold",
-    fontSize: "20px",
-  },
-  infoText: {
-    fontSize: "18px",
-    color: "#777",
-    textAlign: "center",
-  },
 };
 
-export default ChallengesPage;
+export default Challenges;

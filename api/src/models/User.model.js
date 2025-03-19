@@ -44,8 +44,8 @@ const userSchema = new Schema(
     badge: {
       type: String,
       enum: ["Rookie", "Novice", "Intermediate", "Advanced"],
-        default: "Rookie",
-      },
+      default: "Rookie",
+    },
     // Assignments-related fields
     Assignments: [
       {
@@ -81,12 +81,8 @@ const userSchema = new Schema(
     // Challenges tracking
     challenges: [
       {
-        description: { type: String, required: true }, // e.g., "Complete two chapters by Friday"
-        type: { type: String, enum: ["daily", "weekly"], required: true }, // Challenge type
-        completed: { type: Boolean, default: false }, // Has the student completed it?
-        rewardAura: { type: Number, default: 0 }, // Aura points reward
-        rewardCredits: { type: Number, default: 0 }, // Credit points reward
-        deadline: { type: Date, required: true }, // Challenge deadline
+        type: Schema.Types.ObjectId,
+        ref: "Challenge", // Reference to Challenge model
       },
     ],
   },
@@ -99,6 +95,6 @@ userSchema.path("createdAssignments").default(() => []);
 userSchema.path("completedAssignments").default(() => []);
 userSchema.path("createdProjects").default(() => []);
 userSchema.path("submittedProjects").default(() => []);
-userSchema.path("challenges").default(() => []);
+userSchema.path("challenges").default(() => []); // ✅ Default empty array for challenges
 
 export const User = mongoose.model("User", userSchema);

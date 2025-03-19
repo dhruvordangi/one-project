@@ -1,126 +1,157 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+// import { asyncHandler } from "../utils/asyncHandler.js";
 import { Challenge } from "../models/Challenge.model.js";
 
 import { User } from "../models/User.model.js";
 
-
-
-const getAllChallenges = asyncHandler(async (req, res) => {
+// Create a new challenge (teacher only)
+const createChallenge = async (req, res) => {
   try {
-    const userId = req.user.id;
-
-    // Fetch user details
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // Fetch all challenges
-    const allChallenges = await Challenge.find({});
-
-    // Filter out challenges that the user has already completed
-    const userCompletedChallenges = user.challenges.map(ch => ch.description);
-    const availableChallenges = allChallenges.filter(challenge => !userCompletedChallenges.includes(challenge.description));
-
-    res.status(200).json({ success: true, challenges: availableChallenges });
-  } catch (error) {
-    console.error("Error fetching challenges:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
-
-const addChallenge = asyncHandler(async (req, res) => {
-  try {
-    // Only allow teachers to add challenges
-    if (req.user.role !== "teacher") {
-      return res.status(403).json({ success: false, message: "Only teachers can add challenges" });
-    }
+    console.log(req.user);
     
-    const { description, type, rewardAura, rewardCredits, deadline } = req.body;
+    // Assume req.user is set by authentication middleware and is a teacher
+    const { title, chapters, rewardAura, rewardCredit } = req.body;
+    console.log("completed till here");
+    
     const newChallenge = new Challenge({
-      description,
-      type,
+      title,
+      chapters,
       rewardAura,
-      rewardCredits,
-      deadline,
-      createdBy: req.user.id,
+      rewardCredit,
+      submitter: req.user._id
     });
-    
+    console.log("new challenge creating");
     await newChallenge.save();
-    
-    res.status(201).json({ success: true, message: "Challenge added successfully", challenge: newChallenge });
+    console.log("successful");
+
+    res.status(201).json({ message: "Challenge created successfully", challenge: newChallenge });
   } catch (error) {
-    console.error("Error adding challenge:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ message: "Failed to create challenge", error: error.message });
   }
-});
+};
 
-const completeChallenge = asyncHandler(async (req, res) => {
+// Get all challenges (accessible to both teachers and students)
+const getAllChallenges = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { challengeId } = req.params;
-    
-    const challenge = await Challenge.findById(challengeId);
-    if (!challenge) {
-      return res.status(404).json({ success: false, message: "Challenge not found" });
-    }
+    const challenges = await Challenge.find().populate("submitter", "username");
+    res.json(challenges);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch challenges", error: error.message });
+  }
+};
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+// Get a challenge by ID
+const getChallengeById = async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id).populate("submitter", "username");
+    if (!challenge) return res.status(404).json({ message: "Challenge not found" });
+    res.json(challenge);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch challenge", error: error.message });
+  }
+};
 
-    // Check if the challenge is already completed
-    const existingChallenge = user.challenges.find(ch => ch.description === challenge.description);
-    if (existingChallenge) {
-      return res.status(400).json({ success: false, message: "Challenge already completed" });
-    }
+// Student submission to a challenge
+const submitChallenge = async (req, res) => {
+  try {
+    // req.body.answers should mirror the chapters and questions structure
+    // For simplicity, we expect an array of chapters where each chapter contains an array of answers.
+    const { answers } = req.body;
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ message: "Challenge not found" });
 
-    // Add the completed challenge to user's challenges array
-    user.challenges.push({
-      description: challenge.description,
-      type: challenge.type,
-      completed: true,
-      rewardAura: challenge.rewardAura,
-      rewardCredits: challenge.rewardCredits,
-      deadline: challenge.deadline,
+    // Validate student's answers
+    let allCorrect = true;
+    challenge.chapters.forEach((chapter, chapIndex) => {
+      // For each question in the chapter
+      chapter.questions.forEach((question, quesIndex) => {
+        if (!answers[chapIndex] || answers[chapIndex][quesIndex] !== question.answer) {
+          allCorrect = false;
+        }
+      });
     });
 
-    // Update user points
-    user.aura_points += challenge.rewardAura;
-    user.credit_points += challenge.rewardCredits;
+    if (!allCorrect) {
+      return res.status(400).json({ message: "Some answers are incorrect. Please try again." });
+    }
 
-    await user.save();
-
-    res.status(200).json({ success: true, message: "Challenge completed successfully", user });
+    // If correct, add challenge to user's challenges if not already present
+    const user = await User.findById(req.user._id);
+    if (!user.challenges.includes(challenge._id)) {
+      user.challenges.push(challenge._id);
+      // Optionally update user's reward points
+      user.aura_points += challenge.rewardAura;
+      user.credit_points += challenge.rewardCredit;
+      await user.save();
+    }
+    res.json({ message: "Challenge completed and added to your record!", challengeId: challenge._id });
   } catch (error) {
-    console.error("Error completing challenge:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ message: "Submission failed", error: error.message });
   }
-});
+};
 
-const getCompletedChallenges = asyncHandler(async (req, res) => {
+
+// controllers/challengeController.js
+const getTeacherChallenges = async (req, res) => {
   try {
-    const userId = req.user.id;
+    console.log("Inside getTeacherChallenges");
 
-    // Find the user and fetch only completed challenges
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
 
-    const completedChallenges = user.challenges.filter(ch => ch.completed);
+    if (req.user.role !== "teacher") {
+      return res.status(403).json({ message: "Access denied. Only teachers can access this." });
+    }
 
-    res.status(200).json({ success: true, challenges: completedChallenges });
+    const challenges = await Challenge.find({ submitter: req.user._id })
+      .populate("submitter", "username");
+
+    res.json(challenges);
   } catch (error) {
-    console.error("Error fetching completed challenges:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error in getTeacherChallenges:", error);
+    res.status(500).json({ message: "Failed to fetch teacher challenges", error: error.message });
   }
-});
+};
 
 
-  export {
-    getCompletedChallenges,
-    getAllChallenges,
-    addChallenge,
-    completeChallenge,
-  };
+
+
+const getStudentChallenges = async (req, res) => {
+  try {
+    // Ensure the user is authenticated and is a student
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    // Find the current user and get their completed challenge IDs
+    const user = await User.findById(req.user._id).lean();
+    const completedChallengeIds = user.challenges.map(chId => chId.toString());
+
+    // Fetch all challenges (you might filter by other criteria in a real app)
+    const allChallenges = await Challenge.find().populate("submitter", "username");
+
+    // Separate into completed and uncompleted lists
+    const completed = allChallenges.filter(challenge =>
+      completedChallengeIds.includes(challenge._id.toString())
+    );
+    const uncompleted = allChallenges.filter(challenge =>
+      !completedChallengeIds.includes(challenge._id.toString())
+    );
+
+    res.json({ completed, uncompleted });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch student challenges", error: error.message });
+  }
+};
+
+
+
+
+export {
+  getTeacherChallenges,
+  getStudentChallenges,
+  getAllChallenges,
+  createChallenge,
+  getChallengeById,
+  submitChallenge,
+};

@@ -1,18 +1,51 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
-const challengeSchema = new Schema(
-  {
-    description: { type: String, required: true },
-    type: { type: String, enum: ["daily", "weekly"], required: true },
-    rewardAura: { type: Number, default: 0 },
-    rewardCredits: { type: Number, default: 0 },
-    deadline: { type: Date, required: true },
-    // For tracking which teacher created the challenge
-    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
-    // Optionally, track if a challenge is globally available
-    completed: { type: Boolean, default: false },
+const { Schema } = mongoose;
+
+const questionSchema = new Schema({
+  question: {
+    type: String,
+    required: true
   },
-  { timestamps: true }
-);
+  answer: {
+    type: String,
+    enum: ['Yes', 'No'],
+    required: true
+  }
+});
 
-export const Challenge = mongoose.model("Challenge", challengeSchema);
+const chapterSchema = new Schema({
+  description: {
+    type: String,
+    required: true,
+    maxlength: 400 // 400 characters limit
+  },
+  questions: [questionSchema]
+});
+
+const challengeSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  chapters: [chapterSchema],
+  rewardAura: {
+    type: Number,
+    required: true,
+    min: 0 // Ensure non-negative values
+  },
+  rewardCredit: {
+    type: Number,
+    required: true,
+    min: 0 // Ensure non-negative values
+  },
+  submitter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Reference to the User schema
+    required: true
+  }
+}, { timestamps: true });
+
+export const Challenge = mongoose.model('Challenge', challengeSchema);
+

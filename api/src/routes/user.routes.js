@@ -12,7 +12,8 @@ import {
   getUncompletedAssignments,
 } from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
-import { addChallenge, completeChallenge, getAllChallenges, getCompletedChallenges } from "../controllers/challenge.controller.js";
+import { createChallenge, getAllChallenges, getChallengeById, getStudentChallenges, getTeacherChallenges, submitChallenge } from "../controllers/challenge.controller.js";
+import { requireTeacher } from "../middlewares/isTeacher.js";
 
 const router = Router();
 const uploadNone=multer()
@@ -63,16 +64,26 @@ router
   );
 
 
-router.get("/challenges", isAuthenticated, getAllChallenges);
-
-// Add a new challenge (teacher only)
-router.post("/challenges/add", isAuthenticated, addChallenge);
-
-// Mark a challenge as complete (student)
-router.post("/challenges/:challengeId/complete", isAuthenticated, completeChallenge);
-router.get("/challenges/completed", isAuthenticated, getCompletedChallenges);
 // router.route("/")
-// router.route("/")
+// router.route("/")  NOW THE CHALLENGES ROUTES
+
+
+
+const requireStudent = (req, res, next) => {
+  if (req.user && req.user.role === "student") {
+    next();
+  } else {
+    res.status(403).json({ message: "Only students can perform this action." });
+  }
+};
+router.post("/challenges/:id/submit",isAuthenticated, submitChallenge);
+
+router.route("/challenges/created").get(isAuthenticated, getTeacherChallenges);
+router.get("/challenges/student",isAuthenticated, getStudentChallenges);
+
+router.get("/challenges",getAllChallenges );
+router.post("/challenges", isAuthenticated,requireTeacher, createChallenge);
+router.get("/challenges/:id", getChallengeById);
 
 
 export default router;

@@ -17,6 +17,9 @@ import ProjectForm from './Pages/ProjectForm.jsx'
 import AllProjects from './Pages/ProjectPage/AllProjects.jsx'
 import ProjectPage from './Pages/ProjectPage/ProjectsPage.jsx'
 import ChallengesPage from './Pages/Challenges/Challenges.jsx'
+import Challenges from './Pages/Challenges/Challenges.jsx'
+import CreateChallenge from './Pages/Challenges/CreateChallenge.jsx'
+import ChallengeDetail from './Pages/Challenges/ChallengeDetail.jsx'
 
 function App() {
   
@@ -45,7 +48,10 @@ function App() {
           <Route path='/create-project' element={<ProjectForm/>} />
           <Route path='/create-project/:id' element={<ProjectPage/>} />
           <Route path='/all-projects' element={<AllProjects/>} />
-          <Route path='/challenges' element={<ChallengesPage/>} />
+
+          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/challenges/create" element={<CreateChallenge />} />
+          <Route path="/challenges/:id" element={<ChallengeDetail />} />
         </Route>
       </Routes>
       </Auth0Provider>
