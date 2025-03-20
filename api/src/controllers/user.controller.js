@@ -12,7 +12,7 @@ const salt = bcrypt.genSaltSync(10);
 const secret = "jn4k5n6n5nnn6oi4n";
 
 const registerUser = asyncHandler(async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
 
   const { username, password } = req.body;
   try {
