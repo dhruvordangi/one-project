@@ -11,6 +11,8 @@ import { uploadMultipleFiles } from "../utils/cloudinary.js";
 const salt = bcrypt.genSaltSync(10);
 const secret = "jn4k5n6n5nnn6oi4n";
 
+
+
 const registerUser = asyncHandler(async (req, res) => {
   // console.log(req.body);
 
@@ -520,9 +522,6 @@ import { log } from "console";
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
-
-
-
 
 
 
